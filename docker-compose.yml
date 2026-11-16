@@ -1,0 +1,122 @@
+version: '3.9'
+
+# =============================================================================
+# GreenLight — Development Docker Compose
+# =============================================================================
+
+services:
+  # ── Application ─────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: greenlight-app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/greenlight_dev?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src:ro
+      - ./uploads:/app/uploads
+      - app-logs:/app/src/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - greenlight-net
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: greenlight-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: greenlight_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - greenlight-net
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d greenlight_dev']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: greenlight-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ''
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - greenlight-net
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── pgAdmin (dev only) ───────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: greenlight-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@greenlight.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    networks:
+      - greenlight-net
+    profiles:
+      - debug
+
+  # ── Redis Commander (dev only) ───────────────────────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: greenlight-redis-ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - '8081:8081'
+    depends_on:
+      - redis
+    networks:
+      - greenlight-net
+    profiles:
+      - debug
+
+volumes:
+  postgres-data:
+  redis-data:
+  app-logs:
+
+networks:
+  greenlight-net:
+    driver: bridge

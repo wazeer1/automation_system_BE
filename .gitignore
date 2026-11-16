@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment
+.env
+.env.local
+.env.staging
+.env.production
+
+# Logs
+src/logs/*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build
+dist/
+build/
+
+# Prisma
+src/database/prisma/migrations/*.sql
+
+# Uploads / Storage
+uploads/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.docker/
+
+# Misc
+*.pem
+*.key
+*.cert

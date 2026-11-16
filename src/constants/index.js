@@ -1,0 +1,59 @@
+'use strict';
+
+module.exports = {
+  ROLES: Object.freeze({
+    SUPER_ADMIN: 'SUPER_ADMIN',
+    ADMIN: 'ADMIN',
+    MANAGER: 'MANAGER',
+    STAFF: 'STAFF',
+    USER: 'USER',
+  }),
+
+  USER_STATUSES: Object.freeze({
+    ACTIVE: 'ACTIVE',
+    INACTIVE: 'INACTIVE',
+    SUSPENDED: 'SUSPENDED',
+    PENDING_VERIFICATION: 'PENDING_VERIFICATION',
+  }),
+
+  TOKEN_TYPES: Object.freeze({
+    EMAIL_VERIFICATION: 'EMAIL_VERIFICATION',
+    PASSWORD_RESET: 'PASSWORD_RESET',
+    REFRESH: 'REFRESH',
+  }),
+
+  HTTP_STATUS: Object.freeze({
+    OK: 200,
+    CREATED: 201,
+    NO_CONTENT: 204,
+    BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
+    FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    CONFLICT: 409,
+    UNPROCESSABLE: 422,
+    TOO_MANY_REQUESTS: 429,
+    INTERNAL_ERROR: 500,
+    SERVICE_UNAVAILABLE: 503,
+  }),
+
+  ERROR_CODES: Object.freeze({
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
+    UNAUTHORIZED: 'UNAUTHORIZED',
+    FORBIDDEN: 'FORBIDDEN',
+    NOT_FOUND: 'NOT_FOUND',
+    CONFLICT: 'CONFLICT',
+    DATABASE_ERROR: 'DATABASE_ERROR',
+    INTERNAL_ERROR: 'INTERNAL_ERROR',
+    RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  }),
+
+  SORT_ORDERS: Object.freeze({ ASC: 'asc', DESC: 'desc' }),
+
+  ENVIRONMENTS: Object.freeze({
+    DEVELOPMENT: 'development',
+    STAGING: 'staging',
+    PRODUCTION: 'production',
+    TEST: 'test',
+  }),
+};

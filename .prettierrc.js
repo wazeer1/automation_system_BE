@@ -1,0 +1,20 @@
+'use strict';
+
+module.exports = {
+  semi: true,
+  singleQuote: true,
+  quoteProps: 'as-needed',
+  trailingComma: 'es5',
+  tabWidth: 2,
+  useTabs: false,
+  printWidth: 100,
+  bracketSpacing: true,
+  arrowParens: 'always',
+  endOfLine: 'lf',
+  overrides: [
+    {
+      files: '*.json',
+      options: { printWidth: 80 },
+    },
+  ],
+};

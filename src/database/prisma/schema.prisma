@@ -1,0 +1,157 @@
+// =============================================================================
+// Prisma Schema — GreenLight SaaS Platform
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  STAFF
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  REFRESH
+}
+
+// =============================================================================
+// MODELS
+// =============================================================================
+
+model User {
+  id        String     @id @default(uuid()) @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  deletedAt DateTime?  @map("deleted_at")
+  createdBy String?    @map("created_by") @db.Uuid
+  updatedBy String?    @map("updated_by") @db.Uuid
+
+  email          String     @unique @db.VarChar(255)
+  emailVerified  Boolean    @default(false) @map("email_verified")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+
+  firstName  String    @map("first_name") @db.VarChar(100)
+  lastName   String    @map("last_name") @db.VarChar(100)
+  username   String    @unique @db.VarChar(50)
+  avatar     String?   @db.VarChar(500)
+  phone      String?   @db.VarChar(20)
+
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+
+  role       Role       @default(USER)
+  status     UserStatus @default(PENDING_VERIFICATION)
+
+  tenantId   String?   @map("tenant_id") @db.Uuid
+
+  lastLoginAt   DateTime? @map("last_login_at")
+  lastLoginIp   String?   @map("last_login_ip") @db.VarChar(45)
+  loginCount    Int       @default(0) @map("login_count")
+
+  tokens         Token[]
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]     @relation("AuditActor")
+
+  @@index([email])
+  @@index([username])
+  @@index([tenantId])
+  @@index([role])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Token {
+  id        String    @id @default(uuid()) @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  token     String    @unique @db.VarChar(500)
+  type      TokenType
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([type])
+  @@map("tokens")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  tokenHash  String   @unique @map("token_hash") @db.VarChar(500)
+  family     String   @db.Uuid
+  expiresAt  DateTime @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  replacedBy String?  @map("replaced_by") @db.Uuid
+
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actorId    String?  @map("actor_id") @db.Uuid
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole  String?  @map("actor_role") @db.VarChar(50)
+
+  action     String   @db.VarChar(100)
+  resource   String   @db.VarChar(100)
+  resourceId String?  @map("resource_id") @db.Uuid
+
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  tenantId   String?  @map("tenant_id") @db.Uuid
+
+  @@index([actorId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@index([tenantId])
+  @@map("audit_logs")
+}
